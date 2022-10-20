@@ -244,20 +244,20 @@ void sbox_map_path_at(
 {
 	const char *dirfd_path;
 
-	if (!virtual_path) {
+	if (!virtual_path && !(flags & SBOX_MAP_PATH_NULLABLE_PATHNAME)) {
 		res->mres_result_buf = res->mres_result_path = NULL;
 		res->mres_readonly = 1;
 		return;
 	}
-        if (*virtual_path == '\0') {
+	if (virtual_path && *virtual_path == '\0') {
 		goto end;
 	}
 
-	if ((*virtual_path == '/')
+	if (virtual_path && ((*virtual_path == '/')
 #ifdef AT_FDCWD
 	    || (dirfd == AT_FDCWD)
 #endif
-	   ) {
+	   )) {
 		/* same as sbox_map_path() */
 		fwd_map_path(
 			(sbox_binary_name ? sbox_binary_name : "UNKNOWN"),
@@ -271,6 +271,20 @@ void sbox_map_path_at(
 
 	if (dirfd_path) {
 		/* pathname found */
+
+		if (!virtual_path) {
+			SB_LOG(SB_LOGLEVEL_DEBUG,
+				"Synthetic path for %s(%d,NULL) => '%s'",
+				func_name, dirfd, dirfd_path);
+
+			fwd_map_path(
+				(sbox_binary_name ? sbox_binary_name : "UNKNOWN"),
+				func_name,
+				dirfd_path, flags, 0/*exec_mode*/, classmask, res);
+
+			return;
+		}
+
 		char *virtual_abs_path_at_fd = NULL;
 
 		if (asprintf(&virtual_abs_path_at_fd, "%s/%s", dirfd_path, virtual_path) < 0) {

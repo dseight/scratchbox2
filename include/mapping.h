@@ -75,6 +75,7 @@ extern void force_path_to_mapping_result(mapping_results_t *res, const char *pat
 
 #define SBOX_MAP_PATH_DONT_RESOLVE_FINAL_SYMLINK 0x01
 #define SBOX_MAP_PATH_ALLOW_NONEXISTENT          0x02
+#define SBOX_MAP_PATH_NULLABLE_PATHNAME          0x04
 
 extern void sbox_map_path(const char *func_name, const char *path,
 	uint32_t flags, mapping_results_t *res, uint32_t classmask);

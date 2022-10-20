@@ -72,6 +72,10 @@
 #     allows the pathname to refer to nonexistent file in nonexistent directory
 #     (see "allow_nonexistent")
 #     NOTE: THIS MUST BE USED BEFORE THE map() OR map_at() MODIFIERS!
+#   - "nullable_pathname" is used to prefix "map" modifiers where the
+#     pathname is allowed to be NULL. This is usually used in syscalls that
+#     re-use dirfd for file descriptor, if the pathname is NULL.
+#     NOTE: THIS MUST BE USED BEFORE THE map_at() MODIFIER!
 #   - "postprocess(varname)" can be used to call  postprocessor functions for
 #     mapped variables.
 #   - "return(expr)" can be used to alter the return value.
@@ -578,6 +582,7 @@ sub process_wrap_or_gate_modifiers {
 		'mapping_results_by_orig_name' => {},
 		'dont_resolve_final_symlink' => 0,
 		'allow_nonexistent' => 0,
+		'nullable_pathname' => 0,
 
 		'postprocess_vars' => [],
 		'return_expr' => undef,
@@ -688,7 +693,9 @@ sub process_wrap_or_gate_modifiers {
 				expr_to_flagexpr($mods->{'dont_resolve_final_symlink'}, "SBOX_MAP_PATH_DONT_RESOLVE_FINAL_SYMLINK");
 			my $allow_nonexistent =
 				expr_to_flagexpr($mods->{'allow_nonexistent'}, "SBOX_MAP_PATH_ALLOW_NONEXISTENT");
-			my $flags = flagexpr_join($no_symlink_resolve, $allow_nonexistent);
+			my $nullable_pathname =
+				expr_to_flagexpr($mods->{'nullable_pathname'}, "SBOX_MAP_PATH_NULLABLE_PATHNAME");
+			my $flags = flagexpr_join($no_symlink_resolve, $allow_nonexistent, $nullable_pathname);
 
 			$mods->{'mapped_params_by_orig_name'}->{$param_to_be_mapped} = "res_$new_name.mres_result_path";
 			$mods->{'mapping_results_by_orig_name'}->{$param_to_be_mapped} = "res_$new_name";
@@ -760,6 +767,8 @@ sub process_wrap_or_gate_modifiers {
 		} elsif($modifiers[$i] =~ m/^allow_nonexistent_if\((.*)\)$/) {
 			my $condition = $1;
 			$mods->{'allow_nonexistent'} = "($condition)";
+		} elsif($modifiers[$i] eq 'nullable_pathname') {
+			$mods->{'nullable_pathname'} = 1;
 		} elsif(($modifiers[$i] =~ m/^optional_arg_is_create_mode\((.*)\)$/) &&
 			($fn->{'has_varargs'})) {
 			my $va_list_condition = $1;
