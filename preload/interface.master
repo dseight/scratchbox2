@@ -470,6 +470,7 @@ WRAP: int utimensat(int dirfd, const char *pathname, \
 	fail_if_readonly(pathname,-1,EROFS) class(SET_TIMES)
 
 WRAP: int futimesat(int dirfd, const char *pathname, const struct timeval times[2]) : \
+	nullable_pathname \
 	map_at(dirfd,pathname) \
 	fail_if_readonly(pathname,-1,EROFS) class(SET_TIMES)
 
